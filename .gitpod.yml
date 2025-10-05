@@ -1,0 +1,38 @@
+ports:
+  - name: GUAC Web UI
+    description: Frontend (UI)
+    port: 8080
+    visibility: public
+  - name: GUAC API
+    description: API endpoint
+    port: 9000
+    visibility: public
+  - name: Neo4j HTTP
+    description: Neo4j HTTP interface
+    port: 7474
+    visibility: private
+  - name: Neo4j Bolt
+    description: Neo4j Bolt interface
+    port: 7687
+    visibility: private
+
+tasks:
+  - name: Setup Environment
+    init: |
+      echo "📥 Cloning GUAC test data"
+      if [ ! -d guac-data ]; then
+        git clone https://github.com/guacsec/guac-data.git
+      fi
+      echo "🔧 Building GUAC containers..."
+      make container || docker compose build
+    command: |
+      echo "🚀 Starting GUAC stack..."
+      docker compose up -d
+      gp ports await 8080
+      gp ports await 9000
+      echo "✅ GUAC services are up!"
+      url_ui="$(gp url 8080)"
+      url_api="$(gp url 9000)"
+      echo "🌐 Web UI: ${url_ui}"
+      echo "📡 API: ${url_api}"
+      sleep infinity
